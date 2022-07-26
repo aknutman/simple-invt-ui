@@ -60,7 +60,13 @@ export class ItemsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log(`Dialog result: ${result}`);
+      if (typeof result !== 'undefined' && result === true) {
+        if (isNew) {
+          console.log('Save new', result);
+        } else {
+          console.log('Update existing', result);
+        }
+      }
     });
   }
 

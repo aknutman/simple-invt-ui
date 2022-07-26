@@ -13,18 +13,24 @@ export class ApiService {
   getItems() {
     return this.http.get<ItemApiElement[]>(api_url + '/api/items');
   }
+
+  updateItems(req: ItemApiElement) {
+    return this.http.put<any>(api_url + '/api/item/' + req.filename, req.data);
+  }
+}
+
+export interface BasicItemElement {
+  purchase_price: number;
+  sell_price: number;
+  stock_count: number;
+  image: {
+    filename: string;
+    mimetype: string;
+    original_filename: string;
+  };
 }
 
 export interface ItemApiElement {
   filename: string;
-  data: {
-    purchase_price: number;
-    sell_price: number;
-    stock_count: number;
-    image: {
-      filename: string;
-      mimetype: string;
-      original_filename: string;
-    };
-  };
+  data: BasicItemElement;
 }
