@@ -1,3 +1,5 @@
 export const environment = {
-  production: true
+  production: true,
 };
+
+export const api_url = 'https://simple-invt.herokuapp.com';
