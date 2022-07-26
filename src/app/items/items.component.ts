@@ -1,7 +1,9 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, OnChanges, Inject } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormGroup, FormControl } from '@angular/forms';
+
+import { ApiService, ItemApiElement } from '../services/api.service';
 
 export interface ItemElement {
   itemName: string;
@@ -22,6 +24,8 @@ export interface ItemDialogData {
   styleUrls: ['./items.component.css'],
 })
 export class ItemsComponent implements OnInit {
+  downloadedData: ItemElement[] = [];
+
   displayedColumns: string[] = [
     'itemName',
     'purchasePrice',
@@ -29,11 +33,18 @@ export class ItemsComponent implements OnInit {
     'stockCount',
     'fileImage',
   ];
-  datasource = new MatTableDataSource(ELEMENT_DATA);
+  datasource = new MatTableDataSource(this.downloadedData);
 
-  constructor(public dialog: MatDialog) {}
+  constructor(public dialog: MatDialog, public api: ApiService) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.getItems();
+  }
+
+  ngOnChanges() {
+    // this.getItems();
+    // console.log(this.downloadedData);
+  }
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
@@ -51,6 +62,26 @@ export class ItemsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       console.log(`Dialog result: ${result}`);
     });
+  }
+
+  getItems() {
+    this.api
+      .getItems()
+      .subscribe((result: ItemApiElement[]) => {
+        result.forEach((item) => {
+          this.downloadedData.push({
+            itemName: item.filename.replace('.json', ''),
+            purchasePrice: item.data.purchase_price,
+            sellPrice: item.data.sell_price,
+            stockCount: item.data.stock_count,
+            fileImage: item.data.image.filename,
+          });
+        });
+      })
+      .add(() => {
+        // console.log(this.downloadedData);
+        this.datasource = new MatTableDataSource(this.downloadedData);
+      });
   }
 }
 

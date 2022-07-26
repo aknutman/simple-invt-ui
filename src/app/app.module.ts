@@ -7,6 +7,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ReactiveFormsModule } from '@angular/forms';
 
+import { HttpClientModule } from '@angular/common/http';
+
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -26,6 +28,8 @@ import { ItemsComponent, DetailItemsDialog } from './items/items.component';
     BrowserAnimationsModule,
 
     ReactiveFormsModule,
+
+    HttpClientModule,
 
     FlexLayoutModule,
 
