@@ -1,6 +1,10 @@
 import { Component, OnInit, OnChanges, Inject } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 import { FormGroup, FormControl } from '@angular/forms';
 
 import { ApiService, ItemApiElement } from '../services/api.service';
@@ -16,6 +20,7 @@ export interface ItemElement {
 export interface ItemDialogData {
   isNew: boolean;
   item: ItemElement;
+  command: string;
 }
 
 @Component({
@@ -41,10 +46,7 @@ export class ItemsComponent implements OnInit {
     this.getItems();
   }
 
-  ngOnChanges() {
-    // this.getItems();
-    // console.log(this.downloadedData);
-  }
+  ngOnChanges() {}
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
@@ -59,12 +61,26 @@ export class ItemsComponent implements OnInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (typeof result !== 'undefined' && result === true) {
-        if (isNew) {
-          console.log('Save new', result);
-        } else {
+    dialogRef.afterClosed().subscribe((result: ItemDialogData) => {
+      if (typeof result !== 'undefined') {
+        if (result.command === 'DELETE') {
+          this.api
+            .deleteItem(result.item.itemName)
+            .subscribe(
+              (del) => {
+                console.log(del);
+              },
+              (error) => {
+                console.log(error);
+              }
+            )
+            .add(() => {
+              this.getItems();
+            });
+        } else if (result.command === 'UPDATE') {
           console.log('Update existing', result);
+        } else if (result.command === 'NEW') {
+          this.createNew(result);
         }
       }
     });
@@ -74,6 +90,10 @@ export class ItemsComponent implements OnInit {
     this.api
       .getItems()
       .subscribe((result: ItemApiElement[]) => {
+        this.downloadedData = [];
+
+        this.datasource = new MatTableDataSource(this.downloadedData);
+
         result.forEach((item) => {
           this.downloadedData.push({
             itemName: item.filename.replace('.json', ''),
@@ -87,6 +107,33 @@ export class ItemsComponent implements OnInit {
       .add(() => {
         // console.log(this.downloadedData);
         this.datasource = new MatTableDataSource(this.downloadedData);
+      });
+  }
+
+  createNew(data: ItemDialogData) {
+    const savedData = {
+      purchase_price: data.item.purchasePrice,
+      sell_price: data.item.sellPrice,
+      stock_count: data.item.stockCount,
+      image: {
+        filename: '1d95f6e759234ec5b97227600',
+        mimetype: 'image/png',
+        original_filename: 'Screenshot from 2022-04-24 04-35-04.png',
+      },
+    };
+
+    this.api
+      .createNew(data.item.itemName, savedData)
+      .subscribe(
+        (result) => {
+          console.log(result);
+        },
+        (err) => {
+          console.log(err);
+        }
+      )
+      .add(() => {
+        this.getItems();
       });
   }
 }
@@ -112,9 +159,13 @@ export class DetailItemsDialog {
     purchasePrice: new FormControl(0),
     sellPrice: new FormControl(0),
     stockCount: new FormControl(0),
+    fileImage: new FormControl(''),
   });
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: ItemDialogData) {}
+  constructor(
+    public dialogRef: MatDialogRef<DetailItemsDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: ItemDialogData
+  ) {}
 
   ngOnInit() {
     if (typeof this.data.item !== 'undefined') {
@@ -129,5 +180,22 @@ export class DetailItemsDialog {
     if (!this.data.isNew) {
       this.itemForm.controls['itemName'].disable();
     }
+  }
+
+  deleteItem() {
+    this.data.command = 'DELETE';
+    this.dialogRef.close(this.data);
+  }
+
+  createNew() {
+    this.data.command = 'NEW';
+    this.data.item = {
+      itemName: this.itemForm.controls['itemName'].value!,
+      fileImage: this.itemForm.controls['fileImage'].value!,
+      purchasePrice: this.itemForm.controls['purchasePrice'].value!,
+      sellPrice: this.itemForm.controls['sellPrice'].value!,
+      stockCount: this.itemForm.controls['stockCount'].value!,
+    };
+    this.dialogRef.close(this.data);
   }
 }

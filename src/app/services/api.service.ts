@@ -14,8 +14,16 @@ export class ApiService {
     return this.http.get<ItemApiElement[]>(api_url + '/api/items');
   }
 
-  updateItems(req: ItemApiElement) {
+  createNew(fileName: string, data: BasicItemElement) {
+    return this.http.post<any>(api_url + '/api/item/' + fileName, data);
+  }
+
+  updateItem(req: ItemApiElement) {
     return this.http.put<any>(api_url + '/api/item/' + req.filename, req.data);
+  }
+
+  deleteItem(itemName: string) {
+    return this.http.delete<any>(api_url + '/api/item/' + itemName);
   }
 }
 
