@@ -78,7 +78,7 @@ export class ItemsComponent implements OnInit {
               this.getItems();
             });
         } else if (result.command === 'UPDATE') {
-          console.log('Update existing', result);
+          this.updateItem(result);
         } else if (result.command === 'NEW') {
           this.createNew(result);
         }
@@ -124,6 +124,33 @@ export class ItemsComponent implements OnInit {
 
     this.api
       .createNew(data.item.itemName, savedData)
+      .subscribe(
+        (result) => {
+          console.log(result);
+        },
+        (err) => {
+          console.log(err);
+        }
+      )
+      .add(() => {
+        this.getItems();
+      });
+  }
+
+  updateItem(data: ItemDialogData) {
+    const savedData = {
+      purchase_price: data.item.purchasePrice,
+      sell_price: data.item.sellPrice,
+      stock_count: data.item.stockCount,
+      image: {
+        filename: '1d95f6e759234ec5b97227600',
+        mimetype: 'image/png',
+        original_filename: 'Screenshot from 2022-04-24 04-35-04.png',
+      },
+    };
+
+    this.api
+      .updateItem(data.item.itemName, savedData)
       .subscribe(
         (result) => {
           console.log(result);
@@ -187,8 +214,28 @@ export class DetailItemsDialog {
     this.dialogRef.close(this.data);
   }
 
+  saveItem() {
+    if (this.data.isNew) {
+      this.createNew();
+    } else {
+      this.updateItem();
+    }
+  }
+
   createNew() {
     this.data.command = 'NEW';
+    this.data.item = {
+      itemName: this.itemForm.controls['itemName'].value!,
+      fileImage: this.itemForm.controls['fileImage'].value!,
+      purchasePrice: this.itemForm.controls['purchasePrice'].value!,
+      sellPrice: this.itemForm.controls['sellPrice'].value!,
+      stockCount: this.itemForm.controls['stockCount'].value!,
+    };
+    this.dialogRef.close(this.data);
+  }
+
+  updateItem() {
+    this.data.command = 'UPDATE';
     this.data.item = {
       itemName: this.itemForm.controls['itemName'].value!,
       fileImage: this.itemForm.controls['fileImage'].value!,
